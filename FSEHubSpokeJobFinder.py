@@ -6,7 +6,10 @@ import urllib
 import zipfile
 import cStringIO
 import time
-import requests
+try:
+    import requests
+except:
+    print 'Please install requests'
 
 
 moveon = raw_input('ICAO?')
