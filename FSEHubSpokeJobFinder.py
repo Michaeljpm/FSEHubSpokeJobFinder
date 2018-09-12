@@ -1,13 +1,10 @@
 import csv
 import math
 import xml.etree.ElementTree as ET
-import urllib2
 import urllib
 import zipfile
 import cStringIO
-import time
 import requests
-
 
 moveon = raw_input('ICAO?')
 jobnum = input('Min number of pax?')
@@ -25,15 +22,13 @@ except:
     textfile.close()                                        
 
 def homepage(icao):
-    print 'working'
     datafeed = 'http://server.fseconomy.net/data?userkey=' + userkey + '&format=xml&query=icao&search=jobsfrom&icaos=' + icao
     urllib.urlretrieve(datafeed, "file.xml")
     tree = ET.parse('file.xml')
     root = tree.getroot()
-    
     return root
+
 def airportdata():
-    print 'working'
     r = requests.get('http://server.fseconomy.net/static/library/datafeed_icaodata.zip')
     z = zipfile.ZipFile(cStringIO.StringIO(r.content))
     z.extractall()
@@ -54,38 +49,27 @@ def distancecalc(lat1,lat2,long1,long2):
     lat1 = math.radians(lat1)
     long2 = math.radians(long2)
     long1 = math.radians(long1)
-
     a = (math.sin((lat2-lat1)/2)**2) + (math.cos(lat1) * math.cos(lat2) * (math.sin((long2-long1)/2)**2))
-
     c = 2 * (math.atan2(math.sqrt(a), math.sqrt(1-a)))
-
     d = 6371 * c
     d = d * .539957
     return d
+
 def intersperse(lst, item):
     result = [item] * (len(lst) * 2 -1)
     result[0::2] = lst
     return result
+
 print "connecting"
-
 root = homepage(moveon)
-#if moveon != '':
-   # icao = moveon
-   # homepage()
-
-
 apintrest = {}
 intrest1 = []
-goodjobset = []
+goodjobset = {}
 goodjobset2 = []
 icaocurrent = ''
 
-
-
 for child in root:
-
     for assignment in child:
-
         if assignment.tag == '{http://server.fseconomy.net}ToIcao':
             icaocurrent = assignment.text
         if assignment.tag == '{http://server.fseconomy.net}PtAssignment' and assignment.text == 'true':
@@ -95,48 +79,42 @@ for child in root:
                 apintrest.update({icaocurrent: amount})
         if assignment.tag == '{http://server.fseconomy.net}Amount':
             amount = int(assignment.text)
-
-
-print apintrest
 for x in apintrest:
     if apintrest[x] >= jobnum and x not in intrest1:
         intrest1.append(x)
 
 intrest2 = intersperse(intrest1, '-')
 intrest2 = str(intrest2).translate(None, "',[] ")
-
-
-print intrest2
 root = homepage(intrest2)
+
 for ap in intrest1:
-
-
-
 
     for child in root:
         for assignment in child:
-
             if assignment.tag == '{http://server.fseconomy.net}Location':
                 icaocurrent = assignment.text
 
             if assignment.tag == '{http://server.fseconomy.net}PtAssignment' and assignment.text  == 'true':
                 PT = 'true'
-            if assignment.tag == '{http://server.fseconomy.net}ToIcao' and assignment.text == moveon.upper() and PT == 'true':
-
-
-                goodjobset.append(icaocurrent)
+            if assignment.tag == '{http://server.fseconomy.net}ToIcao' and assignment.text == moveon.upper() and icaocurrent == ap and PT == 'true':
+                if icaocurrent in goodjobset:
+                    goodjobset.update({icaocurrent:goodjobset[icaocurrent] + amount})
+                else:
+                    goodjobset.update({icaocurrent:amount})
+            if assignment.tag == '{http://server.fseconomy.net}Amount':
+                amount = int(assignment.text)
 
 
 for x in goodjobset:
-    if goodjobset.count(x) >= jobnum and x not in goodjobset2:
+    if goodjobset[x] >= jobnum and x not in goodjobset2:
         goodjobset2.append(x)
+
 if root.tag == 'Error' and root.text == 'Invalid user key!':
     print 'There was an error. Please double check you Access Key. You can find it in AccessKey.txt'
 elif root.tag == "Error":
     print root.text
 elif len(goodjobset2) == 0:
     print "There are no jobs matching your criteria"
-
 else:
     print goodjobset2
 try:
@@ -162,12 +140,10 @@ if len(latlong) > 1:
         if value not in distance1.values():
             distance1[key] = value
 
-
     distance = sorted(distance1.iteritems(), key=lambda (k, v): (v, k), )
     print "('ICAO', 'ICAO') Nautical Miles"
     for x in distance:
         print x[0], int(x[1])
-
 
 Exit = raw_input("Press any key to exit")
 exit()
