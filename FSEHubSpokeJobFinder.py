@@ -1,9 +1,12 @@
 import csv
 import math
 import xml.etree.ElementTree as ET
+import urllib2
 import urllib
 import zipfile
 import cStringIO
+import time
+import requests
 
 
 moveon = raw_input('ICAO?')
@@ -31,7 +34,7 @@ def homepage(icao):
     return root
 def airportdata():
     print 'working'
-    r = urllib.urlopen('http://server.fseconomy.net/static/library/datafeed_icaodata.zip')
+    r = requests.get('http://server.fseconomy.net/static/library/datafeed_icaodata.zip')
     z = zipfile.ZipFile(cStringIO.StringIO(r.content))
     z.extractall()
     return()
