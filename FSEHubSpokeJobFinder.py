@@ -4,7 +4,11 @@ import xml.etree.ElementTree as ET
 import urllib
 import zipfile
 import cStringIO
-import requests
+
+try:
+    import requests
+except:
+    print 'Please install requests'
 
 moveon = raw_input('ICAO?')
 jobnum = input('Min number of pax?')
