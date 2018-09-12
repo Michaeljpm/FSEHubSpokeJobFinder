@@ -2,14 +2,12 @@ import csv
 import math
 import xml.etree.ElementTree as ET
 import urllib
-import time
-import requests
 import zipfile
 import cStringIO
-import operator
+
 
 moveon = raw_input('ICAO?')
-jobnum = input('Min number of jobs?')
+jobnum = input('Min number of pax?')
 PT = ""
 latlong = dict()
 distance = dict()
@@ -33,7 +31,7 @@ def homepage(icao):
     return root
 def airportdata():
     print 'working'
-    r = requests.get('http://server.fseconomy.net/static/library/datafeed_icaodata.zip')
+    r = urllib.urlopen('http://server.fseconomy.net/static/library/datafeed_icaodata.zip')
     z = zipfile.ZipFile(cStringIO.StringIO(r.content))
     z.extractall()
     return()
@@ -61,15 +59,19 @@ def distancecalc(lat1,lat2,long1,long2):
     d = 6371 * c
     d = d * .539957
     return d
+def intersperse(lst, item):
+    result = [item] * (len(lst) * 2 -1)
+    result[0::2] = lst
+    return result
 print "connecting"
-time.sleep(10)
+
 root = homepage(moveon)
 #if moveon != '':
    # icao = moveon
    # homepage()
 
 
-apintrest = []
+apintrest = {}
 intrest1 = []
 goodjobset = []
 goodjobset2 = []
@@ -84,20 +86,30 @@ for child in root:
         if assignment.tag == '{http://server.fseconomy.net}ToIcao':
             icaocurrent = assignment.text
         if assignment.tag == '{http://server.fseconomy.net}PtAssignment' and assignment.text == 'true':
-            apintrest.append(icaocurrent)
+            if icaocurrent in apintrest:
+                apintrest.update({icaocurrent: apintrest[icaocurrent] + amount})
+            else:
+                apintrest.update({icaocurrent: amount})
+        if assignment.tag == '{http://server.fseconomy.net}Amount':
+            amount = int(assignment.text)
 
 
-
+print apintrest
 for x in apintrest:
-    if apintrest.count(x) >= jobnum and x not in intrest1:
+    if apintrest[x] >= jobnum and x not in intrest1:
         intrest1.append(x)
 
+intrest2 = intersperse(intrest1, '-')
+intrest2 = str(intrest2).translate(None, "',[] ")
 
+
+print intrest2
+root = homepage(intrest2)
 for ap in intrest1:
-    time.sleep(10)
 
 
-    root = homepage(ap)
+
+
     for child in root:
         for assignment in child:
 
