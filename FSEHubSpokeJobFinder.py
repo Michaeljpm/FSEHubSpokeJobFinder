@@ -11,7 +11,6 @@ jobnum = input('Min number of pax?')
 PT = ""
 latlong = dict()
 distance = dict()
-
 try:
     with open('AccessKey.txt') as myfile:
         userkey = myfile.read()
