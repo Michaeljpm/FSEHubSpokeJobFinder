@@ -70,7 +70,7 @@ intrest1 = []
 goodjobset = {}
 goodjobset2 = []
 icaocurrent = ''
-
+i = 1
 for child in root:
     for assignment in child:
         if assignment.tag == '{http://server.fseconomy.net}ToIcao':
@@ -89,24 +89,39 @@ for x in apintrest:
 intrest2 = intersperse(intrest1, '-')
 intrest2 = str(intrest2).translate(None, "',[] ")
 root = homepage(intrest2)
-
+ready = ''
+ready2 = ''
+x = 0
 for ap in intrest1:
 
     for child in root:
+        x = x + 1
+        ready = ''
         for assignment in child:
             if assignment.tag == '{http://server.fseconomy.net}Location':
                 icaocurrent = assignment.text
+            if assignment.tag == '{http://server.fseconomy.net}UnitType' and assignment.text == 'passengers':
+                ready2 = 'true'
+            if assignment.tag == '{http://server.fseconomy.net}ToIcao' and assignment.text == moveon.upper() and icaocurrent == ap:
+                ready = 'true'
 
-            if assignment.tag == '{http://server.fseconomy.net}PtAssignment' and assignment.text  == 'true':
-                PT = 'true'
-            if assignment.tag == '{http://server.fseconomy.net}ToIcao' and assignment.text == moveon.upper() and icaocurrent == ap and PT == 'true':
+            if assignment.tag == '{http://server.fseconomy.net}PtAssignment' and assignment.text  == 'true' and ready == 'true' and ready2 == 'true':
                 if icaocurrent in goodjobset:
                     goodjobset.update({icaocurrent:goodjobset[icaocurrent] + amount})
                 else:
                     goodjobset.update({icaocurrent:amount})
+
+
             if assignment.tag == '{http://server.fseconomy.net}Amount':
                 amount = int(assignment.text)
 
+
+
+
+               # if icaocurrent in goodjobset:
+                #    goodjobset.update({icaocurrent:goodjobset[icaocurrent] + amount})
+                #else:
+                 #   goodjobset.updamountate({icaocurrent:amount})
 
 for x in goodjobset:
     if goodjobset[x] >= jobnum and x not in goodjobset2:
@@ -119,6 +134,7 @@ elif root.tag == "Error":
 elif len(goodjobset2) == 0:
     print "There are no jobs matching your criteria"
 else:
+    print 'Airports with ' + str(jobnum) + ' or more jobs'
     print goodjobset2
 try:
     latlong = airportcsv()
