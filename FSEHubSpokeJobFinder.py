@@ -68,7 +68,7 @@ root = homepage(moveon)
 apintrest = {}
 intrest1 = []
 goodjobset = {}
-goodjobset2 = []
+goodjobset2 = {}
 icaocurrent = ''
 i = 1
 for child in root:
@@ -125,8 +125,11 @@ for ap in intrest1:
 
 for x in goodjobset:
     if goodjobset[x] >= jobnum and x not in goodjobset2:
-        goodjobset2.append(x)
-
+        goodjobset2.update({x:goodjobset[x]})
+for x in apintrest:
+    if x in goodjobset2:
+        paxnum = apintrest[x], goodjobset2[x]
+        goodjobset2.update({x:paxnum})
 if root.tag == 'Error' and root.text == 'Invalid user key!':
     print 'There was an error. Please double check you Access Key. You can find it in AccessKey.txt'
 elif root.tag == "Error":
@@ -135,6 +138,7 @@ elif len(goodjobset2) == 0:
     print "There are no jobs matching your criteria"
 else:
     print 'Airports with ' + str(jobnum) + ' or more jobs'
+    print 'ICAO: Pax to, Pax from'
     print goodjobset2
 try:
     latlong = airportcsv()
